@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-app = FastAPI(title="Python Mongo Atlas", lifespan=lifespan)
+app = FastAPI(title="Python Mongo Atlas", lifespan=lifespan, docs_url="/doc", redoc_url="/redoc")
 
 register_error_handlers(app)
 
