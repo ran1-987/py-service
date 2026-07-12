@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import close_db, connect_db
 from app.core.exceptions import register_error_handlers
@@ -17,6 +18,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Python Mongo Atlas", lifespan=lifespan, docs_url="/doc", redoc_url="/redoc")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 register_error_handlers(app)
 
