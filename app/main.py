@@ -22,7 +22,6 @@ app = FastAPI(title="Python Mongo Atlas", lifespan=lifespan, docs_url="/doc", re
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
