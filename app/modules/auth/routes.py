@@ -64,6 +64,18 @@ async def login(body: LoginRequest):
     return TokenResponse(access_token=token)
 
 
+@router.get("/username-suggestions")
+async def get_username_suggestions(q: str):
+    db = get_db()
+    if db is None:
+        raise DatabaseError()
+    cursor = db["users"].find(
+        {"username": {"$regex": f"^{q}", "$options": "i"}},
+        {"username": 1, "_id": 0},
+    ).limit(10)
+    return [doc["username"] async for doc in cursor]
+
+
 @router.get("/me")
 async def me(current_user: dict = Depends(get_current_user)):
     db = get_db()
