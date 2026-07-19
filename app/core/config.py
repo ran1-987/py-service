@@ -11,9 +11,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    mailgun_api_key: str = ""
-    mailgun_domain: str = ""
-    mailgun_from_email: str = "rakeshranjan.oracle@gmail.com"
+    emitlo_api_key: str = ""
+    emitlo_from_email: str = ""
 
     model_config = {
         "env_file": ROOT_DIR / ".env",
