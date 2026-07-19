@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 587
+    smtp_port: int = 465
     smtp_username: str = ""
     smtp_password: str = ""
     smtp_from_email: str = "rakeshranjan.oracle@gmail.com"
