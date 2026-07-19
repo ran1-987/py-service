@@ -7,6 +7,7 @@ from app.core.database import close_db, connect_db
 from app.core.exceptions import register_error_handlers
 from app.modules.auth.routes import router as auth_router
 from app.modules.items.routes import router as items_router
+from app.modules.email.routes import router as email_router
 from app.modules.users.routes import router as users_router
 
 
@@ -32,6 +33,7 @@ register_error_handlers(app)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(items_router)
+app.include_router(email_router)
 
 
 @app.get("/")
