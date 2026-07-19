@@ -1,8 +1,8 @@
 import logging
 
-import aiosmtplib
-from email.message import EmailMessage
 from fastapi import APIRouter, Depends, status
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from app.core.config import settings
 from app.core.exceptions import BadRequest
@@ -16,25 +16,19 @@ router = APIRouter(prefix="/email", tags=["email"])
 
 @router.post("/send", status_code=status.HTTP_200_OK)
 async def send_email(body: SendEmailRequest, current_user: dict = Depends(get_current_user)):
-    if not settings.smtp_username or not settings.smtp_password:
-        raise BadRequest("SMTP is not configured on the server")
+    if not settings.sendgrid_api_key:
+        raise BadRequest("SendGrid is not configured on the server")
 
-    msg = EmailMessage()
-    msg["From"] = settings.smtp_from_email or settings.smtp_username
-    msg["To"] = body.to_email
-    msg["Subject"] = body.subject
-    msg.set_content(body.body)
+    message = Mail(
+        from_email=settings.sendgrid_from_email,
+        to_emails=body.to_email,
+        subject=body.subject,
+        plain_text_content=body.body,
+    )
 
     try:
-        await aiosmtplib.send(
-            msg,
-            hostname=settings.smtp_host,
-            port=settings.smtp_port,
-            start_tls=False,
-            use_tls=True,
-            username=settings.smtp_username,
-            password=settings.smtp_password,
-        )
+        client = SendGridAPIClient(settings.sendgrid_api_key)
+        client.send(message)
     except Exception as e:
         logger.error("Email send error: %s", e)
         raise BadRequest(f"Failed to send email: {e}")
