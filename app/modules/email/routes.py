@@ -30,7 +30,8 @@ async def send_email(body: SendEmailRequest, current_user: dict = Depends(get_cu
             msg,
             hostname=settings.smtp_host,
             port=settings.smtp_port,
-            start_tls=True,
+            start_tls=False,
+            use_tls=True,
             username=settings.smtp_username,
             password=settings.smtp_password,
         )
