@@ -15,15 +15,18 @@ router = APIRouter(prefix="/email", tags=["email"])
 
 @router.post("/send", status_code=status.HTTP_200_OK)
 async def send_email(body: SendEmailRequest, current_user: dict = Depends(get_current_user)):
-    if not settings.mailgun_api_key or not settings.mailgun_domain:
-        raise BadRequest("Mailgun is not configured on the server")
+    if not settings.emitlo_api_key or not settings.emitlo_from_email:
+        raise BadRequest("Emitlo is not configured on the server")
 
     try:
         response = requests.post(
-            f"https://api.mailgun.net/v3/{settings.mailgun_domain}/messages",
-            auth=("api", settings.mailgun_api_key),
-            data={
-                "from": settings.mailgun_from_email,
+            "https://api.emitlo.com/v1/emails",
+            headers={
+                "Authorization": f"Bearer {settings.emitlo_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": settings.emitlo_from_email,
                 "to": body.to_email,
                 "subject": body.subject,
                 "text": body.body,
