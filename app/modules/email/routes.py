@@ -1,6 +1,7 @@
 import logging
 
-import requests
+import aiosmtplib
+from email.message import EmailMessage
 from fastapi import APIRouter, Depends, status
 
 from app.core.config import settings
@@ -15,21 +16,25 @@ router = APIRouter(prefix="/email", tags=["email"])
 
 @router.post("/send", status_code=status.HTTP_200_OK)
 async def send_email(body: SendEmailRequest, current_user: dict = Depends(get_current_user)):
-    if not settings.mailgun_api_key or not settings.mailgun_domain:
-        raise BadRequest("Mailgun is not configured on the server")
+    if not settings.smtp_username or not settings.smtp_password:
+        raise BadRequest("SMTP is not configured on the server")
+
+    msg = EmailMessage()
+    msg["From"] = settings.smtp_from_email or settings.smtp_username
+    msg["To"] = body.to_email
+    msg["Subject"] = body.subject
+    msg.set_content(body.body)
 
     try:
-        response = requests.post(
-            f"https://api.mailgun.net/v3/{settings.mailgun_domain}/messages",
-            auth=("api", settings.mailgun_api_key),
-            data={
-                "from": settings.mailgun_from_email,
-                "to": body.to_email,
-                "subject": body.subject,
-                "text": body.body,
-            },
+        await aiosmtplib.send(
+            msg,
+            hostname=settings.smtp_host,
+            port=settings.smtp_port,
+            start_tls=False,
+            use_tls=True,
+            username=settings.smtp_username,
+            password=settings.smtp_password,
         )
-        response.raise_for_status()
     except Exception as e:
         logger.error("Email send error: %s", e)
         raise BadRequest(f"Failed to send email: {e}")
