@@ -1,8 +1,7 @@
 import logging
 
+import requests
 from fastapi import APIRouter, Depends, status
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 
 from app.core.config import settings
 from app.core.exceptions import BadRequest
@@ -16,19 +15,21 @@ router = APIRouter(prefix="/email", tags=["email"])
 
 @router.post("/send", status_code=status.HTTP_200_OK)
 async def send_email(body: SendEmailRequest, current_user: dict = Depends(get_current_user)):
-    if not settings.sendgrid_api_key:
-        raise BadRequest("SendGrid is not configured on the server")
-
-    message = Mail(
-        from_email=settings.sendgrid_from_email,
-        to_emails=body.to_email,
-        subject=body.subject,
-        plain_text_content=body.body,
-    )
+    if not settings.mailgun_api_key or not settings.mailgun_domain:
+        raise BadRequest("Mailgun is not configured on the server")
 
     try:
-        client = SendGridAPIClient(settings.sendgrid_api_key)
-        client.send(message)
+        response = requests.post(
+            f"https://api.mailgun.net/v3/{settings.mailgun_domain}/messages",
+            auth=("api", settings.mailgun_api_key),
+            data={
+                "from": settings.mailgun_from_email,
+                "to": body.to_email,
+                "subject": body.subject,
+                "text": body.body,
+            },
+        )
+        response.raise_for_status()
     except Exception as e:
         logger.error("Email send error: %s", e)
         raise BadRequest(f"Failed to send email: {e}")

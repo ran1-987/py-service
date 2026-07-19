@@ -11,8 +11,9 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    sendgrid_api_key: str = ""
-    sendgrid_from_email: str = "rakeshranjan.oracle@gmail.com"
+    mailgun_api_key: str = ""
+    mailgun_domain: str = ""
+    mailgun_from_email: str = "rakeshranjan.oracle@gmail.com"
 
     model_config = {
         "env_file": ROOT_DIR / ".env",
