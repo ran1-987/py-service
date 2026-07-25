@@ -1,7 +1,6 @@
 import logging
 
-import aiosmtplib
-from email.message import EmailMessage
+import httpx
 from fastapi import APIRouter, Depends, status
 
 from app.core.config import settings
@@ -16,25 +15,25 @@ router = APIRouter(prefix="/email", tags=["email"])
 
 @router.post("/send", status_code=status.HTTP_200_OK)
 async def send_email(body: SendEmailRequest, current_user: dict = Depends(get_current_user)):
-    if not settings.smtp_username or not settings.smtp_password:
-        raise BadRequest("SMTP is not configured on the server")
-
-    msg = EmailMessage()
-    msg["From"] = settings.smtp_from_email or settings.smtp_username
-    msg["To"] = body.to_email
-    msg["Subject"] = body.subject
-    msg.set_content(body.body)
+    if not settings.resend_api_key:
+        raise BadRequest("Resend is not configured on the server")
 
     try:
-        await aiosmtplib.send(
-            msg,
-            hostname=settings.smtp_host,
-            port=settings.smtp_port,
-            start_tls=False,
-            use_tls=True,
-            username=settings.smtp_username,
-            password=settings.smtp_password,
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {settings.resend_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": settings.resend_from_email,
+                    "to": [body.to_email],
+                    "subject": body.subject,
+                    "text": body.body,
+                },
+            )
+            response.raise_for_status()
     except Exception as e:
         logger.error("Email send error: %s", e)
         raise BadRequest(f"Failed to send email: {e}")
